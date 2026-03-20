@@ -67,6 +67,7 @@ CORRECT MAPPING:
                pickle.load(), undefined variable (NameError),
                syntax error, weak password hashing (MD5/SHA1)
   🟠 High:     Division by zero (no guard),
+               ZeroDivisionError (unhandled),
                bare except clause hiding crashes,
                unhandled exception that crashes the program
   🟡 Medium:   Missing error handling (try/except),
@@ -74,24 +75,57 @@ CORRECT MAPPING:
                missing input validation
   🟢 Low:      Unused imports, style issues, minor naming
 
-SPECIFIC FIXES TO APPLY:
+SPECIFIC FIXES TO APPLY — apply ALL of these:
 - 🟠 Issue ... Severity: Critical → fix emoji to 🔴
 - 🔴 Issue ... Severity: High → fix emoji to 🟠
+- 🔴 Issue ... Severity: Medium → fix emoji to 🟡
+- Division by zero marked Critical → downgrade to 🟠 High
 - Division by zero marked Medium → upgrade to 🟠 High
+- Division by zero marked Low → upgrade to 🟠 High
+- ZeroDivisionError marked anything except High → fix to 🟠 High
+- Unhandled exception marked Medium → upgrade to 🟠 High
 - Bare except marked Medium → upgrade to 🟠 High
 - Resource leak marked High → downgrade to 🟡 Medium
 - Missing error handling marked High → downgrade to 🟡 Medium
+- Missing input validation marked High → downgrade to 🟡 Medium
 - SQL injection marked Medium or High → upgrade to 🔴 Critical
 - Undefined variable marked Medium or High → upgrade to 🔴 Critical
 - MD5/SHA1 password hashing marked any level → upgrade to 🔴 Critical
 
+CRITICAL DIVISION BY ZERO RULE:
+Any issue title or description containing ANY of these words:
+  "division by zero", "zerodivisionerror", "divide by zero",
+  "len(numbers) == 0", "empty list", "ZeroDivision"
+MUST be classified as 🟠 High — no exceptions.
+If it is currently 🟡 Medium or 🔴 Critical → change it to 🟠 High now.
+
 ---
 
-### CHECK 3 — RESOURCE COUNT
-Count the items in Recommended Resources.
-If there are MORE than 5 → keep only the 3-5 most relevant
-to the actual issues found. Remove the rest.
-NEVER output more than 5 resources.
+### CHECK 3 — RESOURCE COUNT AND RELEVANCE
+PART A — COUNT:
+Count the resources in Recommended Resources.
+Keep only 3 resources maximum — the most relevant ones.
+Remove anything beyond 3.
+
+PART B — RELEVANCE FILTER:
+Remove any resource that matches these patterns:
+  ❌ "Python Type Hints" — not relevant unless code has type issues
+  ❌ "Python Input Validation" — not a real Python docs page
+  ❌ "Python Best Practices" — too generic, remove it
+  ❌ "Code Review Guidelines" — too generic, remove it
+  ❌ "Python Standard Library" — too generic, remove it
+  ❌ Any resource not directly tied to an actual issue found
+
+KEEP only resources directly tied to issues in the report:
+  ✅ SQL injection issue → keep OWASP SQL Injection resource
+  ✅ Division by zero issue → keep Python Exceptions resource
+  ✅ Unused import / PEP 8 issue → keep PEP 8 resource
+  ✅ pickle.load() issue → keep Python pickle resource
+  ✅ Hardcoded credentials → keep os.environ resource
+
+PART C — URLs:
+Every kept resource MUST have a full https:// URL.
+Add from the URL lookup table if missing.
 
 ---
 
@@ -130,23 +164,44 @@ Every bullet in What's Done Well must:
 3. Reference something that ACTUALLY EXISTS in the
    ORIGINAL submitted code — not in the fix suggestions
 
-BANNED bullets (rewrite these):
+CRITICAL ANTI-HALLUCINATION RULE:
+Before accepting any bullet, ask: "Does this feature exist
+in the ORIGINAL code shown at the bottom of this report?"
+If the answer is NO → DELETE the bullet and replace it.
+
+SPECIFIC BANNED PATTERNS — delete any bullet containing:
+  ❌ "raises a ValueError" — if original code has no ValueError
+  ❌ "checks if all elements are numbers" — if original has no such check
+  ❌ "uses parameterized queries" — if original uses string concat
+  ❌ "handles exceptions" — if original has no try/except
+  ❌ "validates input" — if original has no input validation
+  ❌ "correctly raises" — if raise doesn't exist in original
   ❌ "The code is well-structured and easy to understand"
   ❌ "Good use of functions"
   ❌ "The X method is simple and effective"
   ❌ "The code is generally clean and readable"
-  ❌ Praising a fix that doesn't exist in the original code
-     (e.g., "uses parameterized queries" when original uses
-     string concatenation)
+  ❌ Any bullet referencing a line number where that feature
+     does NOT exist in the original code
   ❌ Any bullet that could apply to ANY Python code
 
+WHAT TO PRAISE INSTEAD — look for these in the original:
+  ✅ Use of `math` module constants (e.g. math.pi) instead
+     of hardcoded approximations
+  ✅ Functions separated by single responsibility
+  ✅ Descriptive function names
+  ✅ module-level code wrapped in main()
+  ✅ Use of built-in functions like sum(), len()
+
 REQUIRED format:
-  ✅ "`function_name()` on line N does X, which prevents Y"
-  ✅ "`ClassName.__init__` on line N accepts Z as parameter,
-      making the class reusable without hardcoding"
+  ✅ "`calculate_circle_area()` on line 4 uses `math.pi`
+      instead of a hardcoded approximation, ensuring
+      maximum floating point precision"
+  ✅ "`main()` on line 18 wraps all execution logic,
+      keeping the module safely importable without
+      side effects"
 
 Rewrite any vague or inaccurate bullets to be specific
-and truthful about the ORIGINAL code.
+and truthful about the ORIGINAL code only.
 
 ---
 
@@ -344,20 +399,31 @@ def _split_resources_section(report: str) -> "tuple[str, str, str]":
 def inject_urls(report: str) -> str:
     """
     Programmatically inject missing URLs into Recommended Resources.
-
-    For each resource line that has no https:// URL:
-    1. Match the line text against URL_TABLE keywords
-    2. Inject the matched URL into markdown link format
-    3. Return the corrected report
-
-    This guarantees URLs are always present — no LLM needed.
+    Inline implementation — no tuple unpacking to satisfy Pyre2.
     """
-    before, resources_content, after_resources = _split_resources_section(report)
-    if not resources_content:
+    if "Recommended Resources" not in report:
+        return report
+
+    # Split into before/resources/after
+    split_parts: "list[str]" = report.split("Recommended Resources", 1)
+    before_section: str = str(split_parts[0]) + "Recommended Resources"
+    remainder: str = str(split_parts[1])
+
+    next_match = re.search(r'\n#{1,3} ', remainder)
+    if next_match:
+        idx: int = int(next_match.start())
+        resources_block: str = remainder[:idx]
+        after_block: str = remainder[idx:]
+    else:
+        resources_block = remainder
+        after_block = ""
+
+    if not resources_block:
         return report
 
     fixed_lines: "list[str]" = []
-    for line in str(resources_content).split("\n"):
+    for raw_line in resources_block.split("\n"):
+        line: str = str(raw_line)
         stripped: str = line.strip()
 
         # Only process resource list items
@@ -366,103 +432,109 @@ def inject_urls(report: str) -> str:
             continue
 
         # URL already present — leave as-is
-        if "https://" in str(line) or "http://" in str(line):
+        if "https://" in line or "http://" in line:
             fixed_lines.append(line)
             continue
 
         # Find best matching URL from table
         line_lower: str = line.lower()
-        matched_url: "str | None" = None
+        matched_url: str = ""
         for keyword, url in URL_TABLE.items():
-            if keyword in str(line_lower):
-                matched_url = url
+            if keyword in line_lower:
+                matched_url = str(url)
                 break
 
-        if matched_url is not None:
-            matched_url_str: str = str(matched_url)
-            # Case 1: Has [Name](url) already — leave as-is (caught above)
-            # Case 2: Has [Name] format without URL → insert URL
-            md_link_no_url = re.search(r'\[([^\]]+)\](?!\()', line)
-            if md_link_no_url:
-                name: str = str(md_link_no_url.group(1))
-                line = str(line).replace(
-                    f"[{name}]",
-                    f"[{name}]({matched_url_str})"
+        if matched_url:
+            # Case 1: Has [Name] without URL → insert URL
+            md_match = re.search(r'\[([^\]]+)\](?!\()', line)
+            if md_match:
+                link_name: str = str(md_match.group(1))
+                line = line.replace(
+                    f"[{link_name}]",
+                    f"[{link_name}]({matched_url})"
                 )
             else:
-                # Case 3: Has __bold__ format → convert to [Name](url)
-                bold_match = re.search(r'__([^_]+)__', line)
-                if bold_match:
-                    bold_name: str = str(bold_match.group(1)).strip()
-                    desc_match = re.search(
-                        r'__[^_]+__\s*[—\-]+\s*(.+)', line
-                    )
-                    bold_desc: str = str(desc_match.group(1)).strip() if desc_match else ""
-                    bullet: str = "*" if line.strip().startswith("*") else "-"
-                    if bold_desc:
-                        line = f"  {bullet} **[{bold_name}]({matched_url_str})** — {bold_desc}"
+                # Case 2: Has __bold__ format
+                bold_m = re.search(r'__([^_]+)__', line)
+                if bold_m:
+                    b_name: str = str(bold_m.group(1)).strip()
+                    b_desc_m = re.search(r'__[^_]+__\s*[—\-]+\s*(.+)', line)
+                    b_desc: str = str(b_desc_m.group(1)).strip() if b_desc_m else ""
+                    b_bullet: str = "*" if stripped.startswith("*") else "-"
+                    if b_desc:
+                        line = f"  {b_bullet} **[{b_name}]({matched_url})** — {b_desc}"
                     else:
-                        line = f"  {bullet} **[{bold_name}]({matched_url_str})**"
+                        line = f"  {b_bullet} **[{b_name}]({matched_url})**"
                 else:
-                    # Case 4: Plain text → split on em-dash or dash
-                    found_sep: bool = False
+                    # Case 3: Plain text with separator
+                    found: bool = False
                     for sep in [" — ", " - ", "—"]:
-                        if sep in str(line):
-                            sep_parts: "list[str]" = str(line).split(sep, 1)
-                            raw_name: str = str(sep_parts[0])
-                            plain_desc: str = str(sep_parts[1]).strip() if len(sep_parts) > 1 else ""
-                            clean_name: str = re.sub(
-                                r'^[\s\-\*]+\*{0,2}', '', raw_name
+                        if sep in line:
+                            sep_list: "list[str]" = line.split(sep, 1)
+                            p_raw: str = str(sep_list[0])
+                            p_desc: str = str(sep_list[1]).strip() if len(sep_list) > 1 else ""
+                            p_name: str = re.sub(
+                                r'^[\s\-\*]+\*{0,2}', '', p_raw
                             ).strip().rstrip("*").strip()
-                            plain_bullet: str = "*" if line.strip().startswith("*") else "-"
-                            if plain_desc:
-                                line = f"  {plain_bullet} **[{clean_name}]({matched_url_str})** — {plain_desc}"
+                            p_bullet: str = "*" if stripped.startswith("*") else "-"
+                            if p_desc:
+                                line = f"  {p_bullet} **[{p_name}]({matched_url})** — {p_desc}"
                             else:
-                                line = f"  {plain_bullet} **[{clean_name}]({matched_url_str})**"
-                            found_sep = True
+                                line = f"  {p_bullet} **[{p_name}]({matched_url})**"
+                            found = True
                             break
-                    if not found_sep:
-                        # No separator — wrap whole name
-                        name_match = re.search(
-                            r'[-*]\s+\*{0,2}([^—\[(]+)', line
-                        )
-                        if name_match:
-                            plain_name: str = str(name_match.group(1)).strip().rstrip("*").strip()
-                            old_text: str = str(name_match.group(1))
-                            line = str(line).replace(
-                                old_text,
-                                f"[{plain_name}]({matched_url_str}) ",
+                    if not found:
+                        # Case 4: No separator — wrap whole name
+                        nm = re.search(r'[-*]\s+\*{0,2}([^—\[(]+)', line)
+                        if nm:
+                            nm_name: str = str(nm.group(1)).strip().rstrip("*").strip()
+                            nm_old: str = str(nm.group(1))
+                            line = line.replace(
+                                nm_old,
+                                f"[{nm_name}]({matched_url}) ",
                                 1
                             )
 
         fixed_lines.append(line)
 
-    return str(before) + "\n".join(fixed_lines) + str(after_resources)
+    return before_section + "\n".join(fixed_lines) + after_block
 
 
 def trim_resources(report: str, max_resources: int = 5) -> str:
     """
-    Trim Recommended Resources to a maximum of max_resources items.
-    Keeps only the first max_resources list items.
-    Prevents the LLM from dumping all 14 URLs regardless of relevance.
+    Trim Recommended Resources to max_resources items.
+    Inline implementation — no tuple unpacking to satisfy Pyre2.
     """
-    before, resources_content, after_resources = _split_resources_section(report)
-    if not resources_content:
+    if "Recommended Resources" not in report:
         return report
 
-    lines: "list[str]" = str(resources_content).split("\n")
-    resource_count: int = 0
-    trimmed_lines: "list[str]" = []
+    trim_parts: "list[str]" = report.split("Recommended Resources", 1)
+    trim_before: str = str(trim_parts[0]) + "Recommended Resources"
+    trim_remainder: str = str(trim_parts[1])
 
-    for line in lines:
-        stripped: str = line.strip()
-        if stripped.startswith("-") or stripped.startswith("*"):
-            resource_count = resource_count + 1
-            if resource_count > max_resources:
+    trim_next = re.search(r'\n#{1,3} ', trim_remainder)
+    if trim_next:
+        trim_idx: int = int(trim_next.start())
+        trim_block: str = trim_remainder[:trim_idx]
+        trim_after: str = trim_remainder[trim_idx:]
+    else:
+        trim_block = trim_remainder
+        trim_after = ""
+
+    if not trim_block:
+        return report
+
+    count: int = 0
+    kept: "list[str]" = []
+    for tline in trim_block.split("\n"):
+        ts: str = tline.strip()
+        if ts.startswith("-") or ts.startswith("*"):
+            count = count + 1
+            if count > max_resources:
                 continue
-        trimmed_lines.append(line)
+        kept.append(tline)
 
-    return str(before) + "\n".join(trimmed_lines) + str(after_resources)
+    return trim_before + "\n".join(kept) + trim_after
 
 
 # ────────────────────────────────────────────────────────────────
@@ -501,7 +573,7 @@ def report_validator_node(state: ReviewState) -> dict:
         corrected_report = draft_report
 
     # ── Pass 2: Programmatic post-processing ──────────────────
-    corrected_report = trim_resources(corrected_report, max_resources=5)
+    corrected_report = trim_resources(corrected_report, max_resources=3)
     corrected_report = inject_urls(corrected_report)
 
     return {"final_report": corrected_report}
