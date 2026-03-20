@@ -157,7 +157,7 @@ st.markdown("""
 # ──────────────────────────────────────────────────────────
 
 st.markdown('<h1 class="hero-title">🤖 Iterative Code Review Bot</h1>', unsafe_allow_html=True)
-st.markdown('<p class="hero-subtitle">Powered by LangGraph + gemini — Analyze, Fix, Repeat</p>', unsafe_allow_html=True)
+st.markdown('<p class="hero-subtitle">Powered by LangGraph + groq — Analyze, Fix, Repeat</p>', unsafe_allow_html=True)
 
 # ──────────────────────────────────────────────────────────
 # API Key Check
