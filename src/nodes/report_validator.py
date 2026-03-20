@@ -500,6 +500,103 @@ def inject_urls(report: str) -> str:
     return before_section + "\n".join(fixed_lines) + after_block
 
 
+def strip_original_code(report: str) -> str:
+    """
+    Remove any leaked 'ORIGINAL CODE' block from the report.
+    This block is internal prompt content that sometimes leaks
+    into the LLM output and must never reach the user.
+    """
+    patterns = [
+        r'\n+ORIGINAL CODE\n+.*$',
+        r'\n+Original Code:\n+.*$',
+        r'\n+```python\s*\n+(?:import os|import sqlite|import pickle).*$',
+    ]
+    cleaned: str = str(report)
+    for pattern in patterns:
+        cleaned = re.sub(pattern, '', cleaned, flags=re.DOTALL | re.IGNORECASE)
+    return cleaned.rstrip()
+
+
+def fix_raw_urls(report: str) -> str:
+    """
+    Convert bare URLs in Recommended Resources into proper
+    markdown link format: **[Name](url)** — description
+
+    Handles cases like:
+      - https://docs.python.org/3/tutorial/errors.html — description
+      * https://peps.python.org/pep-0008/ — description
+    """
+    if "Recommended Resources" not in report:
+        return report
+
+    split_r: "list[str]" = report.split("Recommended Resources", 1)
+    fix_before: str = str(split_r[0]) + "Recommended Resources"
+    fix_remainder: str = str(split_r[1])
+
+    fix_next = re.search(r'\n#{1,3} ', fix_remainder)
+    if fix_next:
+        fix_idx: int = int(fix_next.start())
+        fix_block: str = fix_remainder[:fix_idx]
+        fix_after: str = fix_remainder[fix_idx:]
+    else:
+        fix_block = fix_remainder
+        fix_after = ""
+
+    # URL → friendly name mapping
+    URL_NAMES: "dict[str, str]" = {
+        "cheatsheetseries.owasp.org": "OWASP SQL Injection Prevention",
+        "docs.python.org/3/tutorial/errors": "Python Exceptions Documentation",
+        "docs.python.org/3/library/pickle": "Python pickle Security Warning",
+        "docs.python.org/3/library/os.html": "Python os.environ Documentation",
+        "docs.python.org/3/tutorial/inputoutput": "Python File I/O — Context Managers",
+        "docs.python.org/3/library/json": "Python json Module Documentation",
+        "peps.python.org/pep-0008": "PEP 8 — Style Guide for Python Code",
+        "www.psycopg.org": "psycopg2 Connection Pooling",
+        "docs.python.org/3/library/exceptions": "Python Built-in Exceptions",
+        "docs.python.org/3/library/functools": "Python functools.lru_cache",
+        "docs.python.org/3/library/hashlib": "Python hashlib Documentation",
+        "pypi.org/project/bcrypt": "bcrypt — Password Hashing Library",
+        "docs.python.org/3/library/sqlite3": "Python sqlite3 Documentation",
+        "docs.python.org/3/": "Python Official Documentation",
+    }
+
+    fixed: "list[str]" = []
+    for raw in fix_block.split("\n"):
+        line: str = str(raw)
+        stripped: str = line.strip()
+
+        # Only process list items
+        if not (stripped.startswith("-") or stripped.startswith("*")):
+            fixed.append(line)
+            continue
+
+        # Check if line starts with a bare URL (no [Name] wrapper)
+        bare_url_match = re.search(
+            r'^[-*]\s+(https?://\S+?)(\s+[—\-].+)?$', stripped
+        )
+        if bare_url_match:
+            url: str = str(bare_url_match.group(1)).rstrip(')')
+            rest_raw: str = str(bare_url_match.group(2)) if bare_url_match.group(2) else ""
+            rest: str = rest_raw.strip().lstrip('—').lstrip('-').strip()
+
+            # Find friendly name from URL
+            name: str = "Resource"
+            for url_key, url_name in URL_NAMES.items():
+                if url_key in url:
+                    name = url_name
+                    break
+
+            bullet: str = "*" if stripped.startswith("*") else "-"
+            if rest:
+                line = f"  {bullet} **[{name}]({url})** — {rest}"
+            else:
+                line = f"  {bullet} **[{name}]({url})**"
+
+        fixed.append(line)
+
+    return fix_before + "\n".join(fixed) + fix_after
+
+
 def trim_resources(report: str, max_resources: int = 5) -> str:
     """
     Trim Recommended Resources to max_resources items.
@@ -573,7 +670,13 @@ def report_validator_node(state: ReviewState) -> dict:
         corrected_report = draft_report
 
     # ── Pass 2: Programmatic post-processing ──────────────────
+    # Step 1: Strip leaked ORIGINAL CODE block
+    corrected_report = strip_original_code(corrected_report)
+    # Step 2: Fix bare URLs → proper markdown **[Name](url)** format
+    corrected_report = fix_raw_urls(corrected_report)
+    # Step 3: Trim excess resources (max 3)
     corrected_report = trim_resources(corrected_report, max_resources=3)
+    # Step 4: Inject missing URLs (guaranteed — no LLM needed)
     corrected_report = inject_urls(corrected_report)
 
     return {"final_report": corrected_report}
