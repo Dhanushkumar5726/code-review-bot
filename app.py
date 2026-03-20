@@ -125,7 +125,7 @@ st.markdown("""
     /* Sidebar ChatGPT-style Buttons */
     [data-testid="stSidebar"] .stButton > button {
         background: transparent !important;
-        color: #e2e8f0 !important;
+        color: var(--text-color) !important;
         border: none !important;
         padding: 0.5rem 0.75rem !important;
         border-radius: 8px !important;
@@ -141,12 +141,12 @@ st.markdown("""
         font-size: 0.95rem !important;
     }
     [data-testid="stSidebar"] .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.08) !important;
+        background: rgba(128, 128, 128, 0.1) !important;
         transform: none !important;
         box-shadow: none !important;
     }
     [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(128, 128, 128, 0.2) !important;
         font-weight: 500 !important;
     }
 </style>
