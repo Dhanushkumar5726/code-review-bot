@@ -23,11 +23,11 @@ from src.graph import build_review_graph  # pyre-ignore
 
 st.set_page_config(
     page_title="Iterative Code Review Bot",
-    page_icon="logo.png",
+    page_icon="assets/logo.png",
     layout="wide",
 )
 
-st.logo("logo.png")
+st.logo("assets/logo.png")
 
 # Initialize chat sessions
 if "chat_sessions" not in st.session_state:
@@ -214,7 +214,7 @@ max_iterations = 1
 # Display chat messages from history
 current_chat = st.session_state.chat_sessions[st.session_state.current_session]
 for msg in current_chat:
-    with st.chat_message(msg["role"], avatar="logo.png" if msg["role"] == "assistant" else "👤"):
+    with st.chat_message(msg["role"], avatar="assets/logo.png" if msg["role"] == "assistant" else "👤"):
         st.markdown(msg["content"])
 
 # Chat Input
@@ -226,7 +226,7 @@ if prompt := st.chat_input("Paste your Python code here..."):
         st.markdown(user_msg)
 
     # Bot Response
-    with st.chat_message("assistant", avatar="logo.png"):
+    with st.chat_message("assistant", avatar="assets/logo.png"):
         status_text = st.empty()
         status_text.markdown("🕵️‍♂️ Starting analysis...")
         
