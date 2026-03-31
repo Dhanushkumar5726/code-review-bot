@@ -10,11 +10,12 @@ Prompts are kept concise to work well with both cloud and local models.
 ANALYZER_PROMPT = """You are a senior Python engineer performing a code review. Analyze this code carefully.
 
 Strict Rules:
-- Only report issues that definitely exist in the code.
-- Do not invent, assume, or hallucinate problems. Only analyze the code that is provided.
+- CRITICAL ANTI-HALLUCINATION: If the code is completely clean, well-written, and bug-free, you MUST state "No issues found". Do NOT invent issues to justify your role.
+- Only report genuine bugs, vulnerabilities, or clear PEP8 violations.
+- Do NOT flag correct naming conventions or personal stylistic preferences.
+- Do not invent, assume, or hallucinate problems. Only analyze the exact code provided.
 - Avoid duplicate issues. Merge related problems into a single issue.
-- Focus primarily on bugs and runtime errors before style improvements.
-- Style issues should only be reported if they clearly violate Python standards such as PEP8. Do not flag correct naming conventions (e.g. PascalCase for classes).
+- Focus primarily on bugs and runtime errors before minor style improvements.
 
 Analyze for:
 1. Syntax errors (check for missing colons, parenthesis, etc.)
@@ -66,6 +67,9 @@ List all issues found with locations. If exact line numbers are uncertain, refer
 # ────────────────────────────────────────────────────────────────
 ISSUE_FINDER_PROMPT = """Extract issues from this analysis as a JSON array.
 
+CRITICAL ANTI-HALLUCINATION RULE:
+If the analysis says "no issues found", "the code is clean", or similar positive remarks without detailing actual bugs, you MUST return an empty array `[]`. Do NOT invent JSON objects! 
+
 Analysis:
 {analysis}
 
@@ -81,15 +85,15 @@ Return ONLY a JSON array like this:
     "issue_id": "ISSUE_001",
     "type": "bug",
     "severity": "critical",
-    "line": "Line 5 or read_file() method",
+    "line": "Line 5",
     "description": "Division by zero possible",
     "code_snippet": "x / y"
   }}
 ]
 ```
 Type must be: bug, style, security, performance, or readability.
-Severity must be: critical, warning, or info.
-Return [] if no issues. Return ONLY the JSON.
+Severity must be: critical, high, medium, or low.
+Return [] if no issues exist. Return ONLY the JSON.
 """
 
 # ────────────────────────────────────────────────────────────────
@@ -218,7 +222,11 @@ structured review in this EXACT format:
 
 ### 🐛 Issues Found (ordered by severity)
 
-For EACH issue use this EXACT format:
+If the provided Issues list is empty (`[]`), you MUST write exactly:
+"No issues were found in the provided code! Excellent work. 🎉"
+and completely skip the issue block format.
+
+Otherwise, for EACH issue use this EXACT format:
 
 #### <🔴/🟠/🟡/🟢> Issue #<N> — <Title> `(Severity: Critical/High/Medium/Low)`
 - **📍 Location:** Line <exact line number or method name>
