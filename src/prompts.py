@@ -11,6 +11,8 @@ ANALYZER_PROMPT = """You are a senior Python engineer performing a code review. 
 
 Strict Rules:
 - CRITICAL ANTI-HALLUCINATION: If the code is completely clean, well-written, and bug-free, you MUST state "No issues found". Do NOT invent issues to justify your role.
+- NEVER suggest adding `isinstance` or `type()` checks for basic function arguments. Python uses duck typing; raising TypeError manually is an anti-pattern unless strictly required.
+- Do NOT flag unused imports as issues. Ignore them completely.
 - Only report genuine bugs, vulnerabilities, or clear PEP8 violations.
 - Do NOT flag correct naming conventions or personal stylistic preferences.
 - Do not invent, assume, or hallucinate problems. Only analyze the exact code provided.
@@ -45,7 +47,6 @@ MEDIUM:
 - Resource leaks (unclosed files, connections)
 
 LOW:
-- Unused imports
 - Style issues
 - Minor naming issues
 
@@ -319,7 +320,6 @@ Use EXACTLY this severity mapping — no exceptions:
 - Resource leaks (unclosed files)
 
 🟢 Low:
-- Unused imports
 - Style issues
 - Minor naming issues
 
