@@ -41,9 +41,8 @@ def static_analyzer_node(state: ReviewState) -> dict:
 
         # Run flake8. 
         # F821 = undefined name
-        # F401 = imported but unused
         # E999 = SyntaxError
-        cmd = ["flake8", temp_path, "--select=F821,F401,E999"]
+        cmd = ["flake8", temp_path, "--select=F821,E999"]
         
         # We expect a non-zero exit code if issues are found
         process = subprocess.run(cmd, capture_output=True, text=True)
