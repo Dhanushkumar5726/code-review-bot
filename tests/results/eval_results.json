@@ -1,0 +1,51 @@
+{
+  "metrics": {
+    "true_positives": 4,
+    "false_positives": 1,
+    "true_negatives": 0,
+    "false_negatives": 0,
+    "precision": 80.0,
+    "recall": 100.0,
+    "f1_score": 88.9,
+    "false_positive_rate": 100.0,
+    "severity_accuracy": 100.0
+  },
+  "pipeline_score": 90,
+  "test_results": [
+    {
+      "name": "Buggy Code",
+      "issues_found": 8,
+      "review_decision": "changes_requested",
+      "overall_score": null,
+      "pass_rate": 100.0
+    },
+    {
+      "name": "Security Code",
+      "issues_found": 6,
+      "review_decision": "changes_requested",
+      "overall_score": null,
+      "pass_rate": 100.0
+    },
+    {
+      "name": "Clean Code",
+      "issues_found": 6,
+      "review_decision": "changes_requested",
+      "overall_score": null,
+      "pass_rate": 0.0
+    },
+    {
+      "name": "Medium Severity Code",
+      "issues_found": 7,
+      "review_decision": "changes_requested",
+      "overall_score": null,
+      "pass_rate": 100.0
+    },
+    {
+      "name": "Style Only Code",
+      "issues_found": 2,
+      "review_decision": "changes_requested",
+      "overall_score": null,
+      "pass_rate": 66.7
+    }
+  ]
+}
