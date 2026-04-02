@@ -12,6 +12,7 @@ ANALYZER_PROMPT = """You are a senior Python engineer performing a code review. 
 Strict Rules:
 - CRITICAL ANTI-HALLUCINATION: If the code is completely clean, well-written, and bug-free, you MUST state "No issues found". Do NOT invent issues to justify your role.
 - NEVER suggest adding `isinstance` or `type()` checks for basic function arguments. Python uses duck typing; raising TypeError manually is an anti-pattern unless strictly required.
+- NEVER suggest adding missing business logic or architectural features (e.g. adding real network sockets to a dummy script). Only review the exact code that is written.
 - Do NOT flag unused imports as issues. Ignore them completely.
 - Only report genuine bugs, vulnerabilities, or clear PEP8 violations.
 - Do NOT flag correct naming conventions or personal stylistic preferences.
@@ -429,6 +430,8 @@ AND WHY does it matter?"
 CRITICAL: Only reference methods, classes, and variables
 that ACTUALLY EXIST in the submitted code. Never invent
 examples or reference things not present in the code.
+YOU MUST REFER ONLY TO THE ORIGINAL SUBMITTED CODE PROVIDED,
+NOT THE FIXED CODE CONSTRUCTED IN THIS REPORT.
 
 BAD (too vague or hallucinated — NEVER write these):
 - "The code uses a FileProcessor class" (too vague)
@@ -499,6 +502,10 @@ for identical code:
 - Only style/low issues present = minimum 7/10 overall
 Never assign a higher score on a second run for the
 same code.
+
+### RULE 13 — OUTPUT BOUNDS:
+STOP GENERATING immediately after the "Recommended Resources" section.
+Do NOT append an "ORIGINAL CODE" block, and do NOT append any closing commentary.
 
 Context:
 - Completed in {iterations} iterations
