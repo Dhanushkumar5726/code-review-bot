@@ -3,7 +3,50 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Bot, User, Edit, Search, Send, Loader2, Sparkles, AlertTriangle, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Bot, User, Edit, Search, Send, Loader2, Sparkles, AlertTriangle, PanelLeftClose, PanelLeftOpen, Check, Copy } from 'lucide-react';
+
+const CopyableCodeBlock = ({ inline, className, children, ...props }) => {
+  const [isCopied, setIsCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const codeString = String(children).replace(/\n$/, '');
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeString);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  if (!inline && match) {
+    return (
+      <div className="relative group my-4">
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+          {match[1] && <span className="text-xs text-gray-500 font-mono select-none mr-1">{match[1]}</span>}
+          <button
+            onClick={handleCopy}
+            className="p-1.5 rounded-md bg-[#1e293b] border border-[#30363d] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-white hover:bg-[#30363d]"
+            title="Copy code"
+          >
+            {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+          </button>
+        </div>
+        <SyntaxHighlighter
+          {...props}
+          children={codeString}
+          style={vscDarkPlus}
+          language={match[1]}
+          PreTag="div"
+          className="rounded-lg !bg-[#161b22] border border-[#30363d] !pt-10 !my-0"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <code {...props} className={className}>
+      {children}
+    </code>
+  );
+};
 
 function App() {
   const [sessions, setSessions] = useState({
@@ -289,23 +332,7 @@ function App() {
                                    <ReactMarkdown 
                                        remarkPlugins={[remarkGfm]}
                                        components={{
-                                           code({node, inline, className, children, ...props}) {
-                                               const match = /language-(\w+)/.exec(className || '')
-                                               return !inline && match ? (
-                                                   <SyntaxHighlighter
-                                                       {...props}
-                                                       children={String(children).replace(/\n$/, '')}
-                                                       style={vscDarkPlus}
-                                                       language={match[1]}
-                                                       PreTag="div"
-                                                       className="rounded-lg !bg-[#161b22] border border-[#30363d]"
-                                                   />
-                                               ) : (
-                                                   <code {...props} className={className}>
-                                                       {children}
-                                                   </code>
-                                               )
-                                           }
+                                           code: CopyableCodeBlock
                                        }}
                                    >
                                        {msg.content}
