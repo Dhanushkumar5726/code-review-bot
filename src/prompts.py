@@ -268,6 +268,13 @@ Fix issues in this order:
 
 ---
 
+### 📝 Original Code
+```python
+{original_code}
+```
+
+---
+
 ## STRICT RULES — violating any rule is not allowed:
 
 ### RULE 1 — PICKLE SECURITY:
@@ -503,17 +510,11 @@ for identical code:
 Never assign a higher score on a second run for the
 same code.
 
-### RULE 13 — OUTPUT BOUNDS:
-STOP GENERATING immediately after the "Recommended Resources" section.
-Do NOT append an "ORIGINAL CODE" block, and do NOT append any closing commentary.
+### RULE 13 — DIFF WRAPPERS:
+Every single code fix under the "✅ Fix" section MUST be wrapped exactly in ` ```diff ` and ` ``` ` markdown blocks. Never output raw `+` or `-` lines outside of a diff code block.
 
 Context:
 - Completed in {iterations} iterations
-
-Original Code:
-```python
-{original_code}
-```
 
 Detailed Issues found:
 {issues_json}
