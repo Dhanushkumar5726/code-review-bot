@@ -94,10 +94,21 @@ python main.py --code "def hello(): print('hi')"
 python main.py
 ```
 
-### Web UI (Streamlit)
+### Web UI (React + FastAPI)
 
+The interface is a highly responsive, ChatGPT-style web app built in React that streams live updates from the Python backend.
+
+**1. Start the Backend API (FastAPI):**
 ```bash
-streamlit run app.py
+uvicorn app:app --reload
+```
+
+**2. Start the Frontend (Vite + React):**
+Open a new terminal window:
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ## 📊 Evaluation & Metrics (C8, C9)
@@ -133,7 +144,8 @@ code-review-bot/
 │       ├── checklist.py      # Checklist validation
 │       └── report_generator.py
 ├── main.py                   # CLI entry point
-├── app.py                    # Streamlit web UI
+├── app.py                    # FastAPI Backend API Server
+├── frontend/                 # React + Vite Web UI
 └── tests/
     └── sample_code/
         ├── buggy_code.py     # Test with intentional bugs
@@ -159,6 +171,7 @@ The bot validates code against these items:
 | Technology | Purpose |
 |---|---|
 | LangGraph | Stateful workflow orchestration |
-| Google Gemini | LLM-powered code analysis |
-| Streamlit | Web UI |
+| FastAPI | Streaming API Backend |
+| React (Vite) | Web UI Interface |
+| Tailwind CSS | UI Styling |
 | Python | Core language |
