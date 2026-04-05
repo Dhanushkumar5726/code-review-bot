@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@layer base {
+  body {
+    @apply bg-[#0e1117] text-gray-100 antialiased m-0 p-0 overflow-hidden h-screen;
+    font-family: 'Outfit', sans-serif;
+  }
+  
+  #root {
+    @apply h-full w-full;
+  }
+}
+
+@layer utilities {
+  .hero-title {
+    background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+    box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+  }
+}
+
+/* Markdown prose styling */
+.prose {
+  @apply text-gray-200 text-[15px] leading-relaxed;
+}
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply text-gray-100 font-semibold mt-6 mb-4;
+}
+.prose p {
+  @apply mb-4;
+}
+.prose ul {
+  @apply list-disc list-inside mb-4;
+}
+.prose ol {
+  @apply list-decimal list-inside mb-4;
+}
+.prose pre {
+  @apply bg-[#1e293b] p-4 rounded-lg my-4 overflow-x-auto text-[14px];
+}
+.prose code {
+  @apply font-mono bg-[#1e293b] py-0.5 px-1.5 rounded text-[14px] text-pink-400;
+}
+.prose pre code {
+  @apply bg-transparent p-0 text-gray-200;
+}
+.prose blockquote {
+  @apply border-l-4 border-indigo-500 pl-4 py-1 bg-indigo-500/10 italic my-4;
+}
+.prose a {
+  @apply text-indigo-400 hover:text-indigo-300 underline;
+}
+
+/* Markdown tables */
+.prose table {
+  @apply w-full text-left border-collapse my-6 text-[14px];
+}
+.prose th {
+  @apply border-b border-[#30363d] p-3 font-semibold text-gray-200 bg-[#30363d]/30;
+}
+.prose td {
+  @apply border-b border-[#30363d] p-3 text-gray-300;
+}
+
+/* Issue lists in markdown */
+.prose li {
+  @apply mb-1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
