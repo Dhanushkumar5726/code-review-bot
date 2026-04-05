@@ -67,8 +67,13 @@ function App() {
     setStatusText('🕵️‍♂️ Starting analysis...');
 
     try {
+      // Use dynamic URL for production
+      const apiUrl = import.meta.env.VITE_API_URL 
+          ? `${import.meta.env.VITE_API_URL}/review` 
+          : 'http://localhost:8000/review';
+
       // Connect to FastAPI SSE Endpoint
-      const response = await fetch('http://localhost:8000/review', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +149,7 @@ function App() {
         ...prev,
         [currentSession]: [
           ...prev[currentSession],
-          { role: "assistant", content: `🚨 **Pipeline Interrupted:** Could not connect to API.\n\nMake sure the FastAPI server is running on http://localhost:8000.` }
+          { role: "assistant", content: `🚨 **Pipeline Interrupted:** Could not connect to API.\n\nMake sure the backend server is running.` }
         ]
       }));
       setStatusText('');

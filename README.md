@@ -175,3 +175,32 @@ The bot validates code against these items:
 | React (Vite) | Web UI Interface |
 | Tailwind CSS | UI Styling |
 | Python | Core language |
+
+## 🚀 Live Deployment Guide (Render + Vercel)
+
+Now that the codebase is properly separated, deploying it to automatically update via GitHub is incredibly easy.
+
+### Part 1: Deploying the Backend (Render)
+1. Go to [Render.com](https://render.com) and log in.
+2. Click **New +** and select **Blueprint**.
+3. Connect your GitHub account and select this `code-review-bot` repository.
+4. Render will automatically detect the `render.yaml` file natively included in this repo. Click **Approve**.
+5. Once created, go to the **Environment** tab on your newly deployed Render Web Service dashboard.
+6. Add your API Keys as Environment Variables:
+   - `LLM_PROVIDER`: `groq` or `gemini`
+   - `GROQ_API_KEY`: (your key)
+   - `GOOGLE_API_KEY`: (your key)
+7. Wait for the deploy to say **Live**, then copy your new Render URL (it should look like `https://code-review-backend-xxxx.onrender.com`).
+
+### Part 2: Deploying the Frontend (Vercel)
+1. Go to [Vercel.com](https://vercel.com) and log in.
+2. Click **Add New... -> Project**.
+3. Connect your GitHub account and **Import** the `code-review-bot` repository.
+4. Go to **Framework Preset** and ensure it says `Vite`.
+5. For the **Root Directory**, click edit and select the `frontend` folder.
+6. Open the **Environment Variables** section. Add a new variable:
+   - **Name:** `VITE_API_URL`
+   - **Value:** Paste your Render URL from Part 1 here (e.g., `https://code-review-backend-xxxx.onrender.com`)
+7. Click **Deploy**.
+
+> **Note:** Because you set `VITE_API_URL` differently on Vercel than on your local computer, your deployed React app will securely talk to your shipped Render AI backend, while your local development website will continue to talk seamlessly to `localhost:8000` during any future local testing!
