@@ -11,21 +11,38 @@ from src.state import ReviewState  # pyre-ignore
 from src.prompts import INPUT_GUARDRAIL_PROMPT  # pyre-ignore
 from src.llm_utils import create_llm, invoke_with_retry  # pyre-ignore
 import json
+import re
 
 def parse_dict_safely(text: str) -> dict:
     cleaned = text.strip()
+    
+    # Try markdown extraction first
     if "```json" in cleaned:
-        cleaned = cleaned.split("```json")[1]
-        cleaned = cleaned.split("```")[0]
+        cleaned = cleaned.split("```json")[1].split("```")[0]
     elif "```" in cleaned:
-        cleaned = cleaned.split("```")[1]
-        cleaned = cleaned.split("```")[0]
+        cleaned = cleaned.split("```")[1].split("```")[0]
+        
     cleaned = cleaned.strip()
+    
+    # Attempt standard parse
     try:
         result = json.loads(cleaned)
-        return result if isinstance(result, dict) else {}
+        if isinstance(result, dict):
+            return result
     except json.JSONDecodeError:
-        return {}
+        pass
+        
+    # If parsing failed, try extracting anything that looks like a JSON object
+    match = re.search(r'(\{.*\})', text, re.DOTALL)
+    if match:
+        try:
+            result = json.loads(match.group(1))
+            if isinstance(result, dict):
+                return result
+        except json.JSONDecodeError:
+            pass
+            
+    return {}
 
 def input_guardrail_node(state: ReviewState) -> dict:
     """
