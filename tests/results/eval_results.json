@@ -1,16 +1,16 @@
 {
   "metrics": {
-    "true_positives": 4,
-    "false_positives": 1,
-    "true_negatives": 0,
-    "false_negatives": 0,
-    "precision": 80.0,
-    "recall": 100.0,
-    "f1_score": 88.9,
-    "false_positive_rate": 100.0,
-    "severity_accuracy": 100.0
+    "true_positives": 3,
+    "false_positives": 0,
+    "true_negatives": 1,
+    "false_negatives": 1,
+    "precision": 100.0,
+    "recall": 75.0,
+    "f1_score": 85.7,
+    "false_positive_rate": 0.0,
+    "severity_accuracy": 66.7
   },
-  "pipeline_score": 90,
+  "pipeline_score": 85,
   "test_results": [
     {
       "name": "Buggy Code",
@@ -21,31 +21,31 @@
     },
     {
       "name": "Security Code",
-      "issues_found": 6,
+      "issues_found": 9,
       "review_decision": "changes_requested",
       "overall_score": null,
       "pass_rate": 100.0
     },
     {
       "name": "Clean Code",
-      "issues_found": 6,
-      "review_decision": "changes_requested",
-      "overall_score": null,
-      "pass_rate": 0.0
-    },
-    {
-      "name": "Medium Severity Code",
-      "issues_found": 7,
-      "review_decision": "changes_requested",
+      "issues_found": 0,
+      "review_decision": "approved",
       "overall_score": null,
       "pass_rate": 100.0
     },
     {
-      "name": "Style Only Code",
-      "issues_found": 2,
+      "name": "Medium Severity Code",
+      "issues_found": 5,
       "review_decision": "changes_requested",
       "overall_score": null,
       "pass_rate": 66.7
+    },
+    {
+      "name": "Style Only Code",
+      "issues_found": 0,
+      "review_decision": "approved",
+      "overall_score": null,
+      "pass_rate": 0.0
     }
   ]
 }

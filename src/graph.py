@@ -26,11 +26,22 @@ from src.nodes.code_fixer import code_fixer_node  # pyre-ignore
 from src.nodes.checklist import checklist_node  # pyre-ignore
 from src.nodes.report_generator import report_generator_node  # pyre-ignore
 from src.nodes.report_validator import report_validator_node  # pyre-ignore  ← NEW
+from src.nodes.input_guardrail import input_guardrail_node  # pyre-ignore
 
 
 # ──────────────────────────────────────────────────────────
 # Conditional Edge Functions
 # ──────────────────────────────────────────────────────────
+
+def route_after_input_guardrail(state: ReviewState) -> str:
+    """
+    Route off-topic questions directly to END.
+    Otherwise, proceed to static_analyzer.
+    """
+    if state.get("is_off_topic"):
+        return END
+    return "static_analyzer"
+
 
 def route_after_issue_finder(state: ReviewState) -> str:
     """
@@ -69,7 +80,6 @@ def build_review_graph() -> StateGraph:
     """
     graph = StateGraph(ReviewState)
 
-    # ── Add all nodes ──────────────────────────────────────
     graph.add_node("static_analyzer", static_analyzer_node)
     graph.add_node("analyzer", analyzer_node)
     graph.add_node("issue_finder", issue_finder_node)
@@ -78,11 +88,24 @@ def build_review_graph() -> StateGraph:
     graph.add_node("checklist", checklist_node)
     graph.add_node("report_generator", report_generator_node)
     graph.add_node("report_validator", report_validator_node)  # ← NEW
+    graph.add_node("input_guardrail", input_guardrail_node)
 
     # ── Define edges ───────────────────────────────────────
 
-    # START → static_analyzer → analyzer
-    graph.add_edge(START, "static_analyzer")
+    # START → input_guardrail
+    graph.add_edge(START, "input_guardrail")
+    
+    # input_guardrail → END OR static_analyzer
+    graph.add_conditional_edges(
+        "input_guardrail",
+        route_after_input_guardrail,
+        {
+            "static_analyzer": "static_analyzer",
+            END: END,
+        },
+    )
+
+    # static_analyzer → analyzer
     graph.add_edge("static_analyzer", "analyzer")
 
     # analyzer → issue_finder

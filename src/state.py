@@ -55,6 +55,7 @@ class ReviewState(TypedDict):
     original_code: str              # The submitted Python code (never modified)
 
     # --- Working State ---
+    is_off_topic: bool              # True if input is conversational/off-topic
     current_code: str               # The latest version of the code (updated after fixes)
     static_analysis_results: str    # Output from AST/Flake8 (Syntax/Runtime bugs)
     analysis: str                   # Raw LLM analysis output

@@ -546,3 +546,22 @@ def build_analyzer_context(history_context: str = "", static_results: str = "") 
         "history_context": history_context or "No previous iterations.",
         "static_results": static_results or "No static analysis results available.",
     }
+
+
+# ────────────────────────────────────────────────────────────────
+# INPUT GUARDRAIL PROMPT
+# ────────────────────────────────────────────────────────────────
+INPUT_GUARDRAIL_PROMPT = """You are an input guardrail for an AI Code Review Bot.
+Your job is to determine if the user's input is related to code, software engineering, or a request for a code review.
+If the user asks an off-topic question (e.g., "give me a biryani recipe", "what is the capital of France", "write a poem"), you must classify it as OFF_TOPIC.
+If the user provides a code snippet, asks a programming question, or asks you to review code, classify it as CODE.
+
+User Input:
+{input_text}
+
+Return ONLY a JSON object exactly like this:
+```json
+{{"classification": "CODE_OR_OFF_TOPIC", "reasoning": "brief explanation"}}
+```
+Where "classification" is exactly "CODE" or "OFF_TOPIC".
+"""
